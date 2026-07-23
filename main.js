@@ -1,48 +1,125 @@
 import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
 import { GLTFLoader } from "https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
+import { OrbitControls } from "https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js";
+
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x222222);
+scene.background = new THREE.Color(0x202020);
+
 
 const camera = new THREE.PerspectiveCamera(
   45,
-  window.innerWidth / window.innerHeight,
+  innerWidth / innerHeight,
   0.1,
   100
 );
 
-camera.position.set(0, 0, 3);
+camera.position.set(0,0,3);
 
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
+
+const renderer = new THREE.WebGLRenderer({
+  antialias:true
+});
+
+renderer.setSize(innerWidth,innerHeight);
 document.body.appendChild(renderer.domElement);
 
 
-// ライト
-const light = new THREE.HemisphereLight(0xffffff, 0x555555, 3);
+
+const light = new THREE.HemisphereLight(
+  0xffffff,
+  0x444444,
+  3
+);
+
 scene.add(light);
 
 
-// GLB読み込み
+
+const controls = new OrbitControls(
+  camera,
+  renderer.domElement
+);
+
+controls.enableDamping=true;
+
+
+
 const loader = new GLTFLoader();
+
 
 loader.load(
   "./DamagedHelmet.glb",
-  (gltf) => {
-    scene.add(gltf.scene);
-    alert("GLB成功");
+
+  (data)=>{
+
+    const model=data.scene;
+
+    scene.add(model);
+
+
+    // 自動サイズ調整
+    const box=new THREE.Box3()
+      .setFromObject(model);
+
+    const size=box.getSize(
+      new THREE.Vector3()
+    );
+
+    const center=box.getCenter(
+      new THREE.Vector3()
+    );
+
+    model.position.sub(center);
+
+
+    const max=Math.max(
+      size.x,
+      size.y,
+      size.z
+    );
+
+    camera.position.z=max*2;
+
+
   },
+
   undefined,
-  (error) => {
-    alert("GLB失敗");
-    console.error(error);
+
+  (err)=>{
+    console.error(err);
   }
 );
 
 
-function animate(){
-  requestAnimationFrame(animate);
-  renderer.render(scene,camera);
+
+addEventListener(
+"resize",
+()=>{
+
+camera.aspect=innerWidth/innerHeight;
+camera.updateProjectionMatrix();
+
+renderer.setSize(
+innerWidth,
+innerHeight
+);
+
+});
+
+
+
+function loop(){
+
+requestAnimationFrame(loop);
+
+controls.update();
+
+renderer.render(
+scene,
+camera
+);
+
 }
 
-animate();
+loop();
