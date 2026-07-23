@@ -2,6 +2,8 @@ import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
 import { GLTFLoader } from "https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js";
 
+alert("起動");
+
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x222222);
 
@@ -12,7 +14,7 @@ const camera = new THREE.PerspectiveCamera(
   100
 );
 
-camera.position.set(0, 1, 3);
+camera.position.set(0, 0, 2);
 
 const renderer = new THREE.WebGLRenderer({
   antialias: true
@@ -27,7 +29,7 @@ const light = new THREE.HemisphereLight(0xffffff, 0x444444, 3);
 scene.add(light);
 
 
-// 操作
+// カメラ操作
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
@@ -37,13 +39,25 @@ const loader = new GLTFLoader();
 
 loader.load(
   "DamagedHelmet.glb",
+
   (gltf) => {
-    scene.add(gltf.scene);
-    console.log("モデル読み込み成功");
+    const model = gltf.scene;
+
+    scene.add(model);
+
+    // 中央に配置
+    const box = new THREE.Box3().setFromObject(model);
+    const center = box.getCenter(new THREE.Vector3());
+    model.position.sub(center);
+
+    alert("モデル読み込み成功");
   },
+
   undefined,
+
   (error) => {
-    console.error("読み込み失敗", error);
+    alert("モデル読み込み失敗");
+    console.log(error);
   }
 );
 
@@ -57,10 +71,12 @@ window.addEventListener("resize", () => {
 
 
 // 描画
-function animate(){
+function animate() {
   requestAnimationFrame(animate);
+
   controls.update();
-  renderer.render(scene,camera);
+
+  renderer.render(scene, camera);
 }
 
 animate();
